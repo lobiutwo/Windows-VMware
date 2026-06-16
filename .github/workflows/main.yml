@@ -1,7 +1,59 @@
-- name: Run Local Docker Commands
+name: Ultimate Windows 11 VPS via Tailscale
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  launch-windows:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Code aus dem Repository auschecken
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Verbindung zu deinem Tailscale-Netzwerk aufbauen
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@v2
+      with:
+        authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
+
+    # 3. Windows 11 Docker-Container mit vollem RDP-Zugriff starten
+    - name: Start Windows 11 Container
       run: |
-        echo "Starte einen Nginx-Container..."
-        docker run -d -p 80:80 --name mein_webserver nginx
+        echo "Lade das Windows 11 Image und starte den VPS..."
         
-        echo "Aktuelle Container:"
-        docker ps
+        # Startet ein voll funktionsfähiges Windows 11 im Hintergrund.
+        # Es teilt sich das Netzwerk mit Tailscale, damit du direkt drauf zugreifen kannst.
+        docker run -d \
+          --name windows11-vps \
+          --device=/dev/kvm \
+          --cap-add=NET_ADMIN \
+          -p 3389:3389/tcp \
+          -p 3389:3389/udp \
+          -e RAM_SIZE="4G" \
+          -e CPU_CORES="2" \
+          dockurr/windows
+
+        echo "Windows 11 wird im Hintergrund hochgefahren!"
+        echo "Warte 30 Sekunden, bis die Dienste bereit sind..."
+        sleep 30
+
+    # 4. Zeige dir die IP an, mit der du dich verbinden musst
+    - name: Get Connection IP
+      run: |
+        echo "=== DEINE ZUGANGSDATEN ==="
+        echo "Öffne deine RDP-App (Remotedesktop) auf dem PC oder Tablet."
+        echo ""
+        echo "1. IP-Adresse für die Verbindung (Nutze eine dieser IPs):"
+        tailscale ip -4
+        echo ""
+        echo "2. Login-Daten:"
+        echo "   Benutzername: Administrator"
+        echo "   Passwort:    (Leer lassen oder das Passwort aus der dockurr/windows Dokumentation nutzen)"
+        echo "=========================="
+        
+        # Hält den GitHub-Runner aktiv, damit die Maschine nicht sofort wieder ausgeht (Läuft bis zu 6 Stunden)
+        echo "Maschine bleibt jetzt online. Du kannst dich verbinden!"
+        sleep 21600

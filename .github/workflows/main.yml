@@ -24,12 +24,8 @@ jobs:
       run: |
         echo "Verbindung steht! Kontaktiere entfernten Docker-Host..."
         
-        # ERSETZE '100.x.y.z' MIT DER TAILSCALE-IP DEINER VM!
-        # Damit sagst du GitHub, dass es Docker-Befehle direkt auf deiner VM ausführen soll.
-        export DOCKER_HOST="tcp://100.x.y.z:2375"
+        # GitHub setzt hier jetzt automatisch deine echte IP aus den Secrets ein
+        export DOCKER_HOST="tcp://${{ secrets.TARGET_IP }}:2375"
         
         # Test: Zeigt dir die Container an, die auf deiner VM laufen
         docker ps
-        
-        # Hier kannst du jetzt deine Container starten, z.B.:
-        # docker run -d -p 80:80 nginx

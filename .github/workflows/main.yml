@@ -9,15 +9,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Code aus dem Repository auschecken
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Direkt Docker-Befehle lokal ausführen
     - name: Run Local Docker Commands
       run: |
-        echo "Führe Docker direkt lokal auf dem Runner aus..."
+        echo "Starte deine Docker-Container..."
         
-        # Kein Export von DOCKER_HOST nötig!
-        # Der Linux-Runner greift direkt auf seinen eigenen lokalen Docker-Dienst zu.
+        # Beispiel 1: Einen Container starten (z. B. Nginx)
+        # docker run -d -p 80:80 --name mein_server nginx
+        
+        # Beispiel 2: Falls du ein Dockerfile im Repository hast, um es zu bauen:
+        # docker build -t meine-app .
+        # docker run -d -p 8080:8080 meine-app
+        
+        # Am Ende zur Kontrolle auflisten (das, was jetzt geklappt hat)
         docker ps

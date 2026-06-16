@@ -19,33 +19,18 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Direkt per PowerShell-WinRM Befehle auf den Windows 11 VPS schicken
-    - name: Run Docker on Windows 11 VPS via WinRM
-      shell: pwsh
+    # 3. SSH-Passpass-Tool installieren (damit wir das Passwort per Skript übergeben können)
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
+    # 4. Über SSH direkt auf dem Windows 11 VPS einloggen und Docker steuern
+    - name: Run Docker on Windows 11 VPS via SSH
       env:
-        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        VPS_PASS: ${{ secrets.VPS_PASSWORD }}
       run: |
-        Write-Host "Verbindung steht. Baue WinRM-Sitzung zum Windows 11 VPS auf..."
+        echo "Verbindung steht. Baue SSH-Sitzung zum Windows 11 VPS auf..."
         
-        # Ersetze 100.11.22.33 mit deiner echten Tailscale-IP des VPS
-        # Ersetze Administrator mit deinem VPS-Benutzernamen
-        $vpsIp = "100.11.22.33"
-        $username = "Administrator"
+        # WICHTIG: Ersetze '100.11.22.33' mit deiner echten Tailscale-IP!
+        # Ersetze 'Administrator' mit deinem echten Benutzernamen des VPS!
         
-        # Passwort sicher in ein Windows-Credential-Objekt umwandeln
-        $secPassword = ConvertTo-SecureString $env:VPS_PASSWORD -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential($username, $secPassword)
-        
-        # WinRM-Optionen setzen (Sicherheitsüberprüfungen überspringen, da wir im sicheren Tailscale-Netz sind)
-        $options = New-PSSessionOption -SkipCACheck -SkipCNCheck
-        
-        # Den Docker-Befehl direkt auf dem Remote-Windows-System ausführen
-        Invoke-Command -ComputerName $vpsIp -Credential $cred -SessionOption $options -ScriptBlock {
-            Write-Host "Erfolgreich auf Windows 11 VPS eingeloggt!"
-            
-            # Hier läuft der Befehl jetzt lokal AUF deinem Windows 11 VPS:
-            docker ps
-            
-            # Hier kannst du später deine gewünschten Docker-Befehle einfügen, z.B.:
-            # docker run -d -p 80:80 nginx
-        }
+        sshpass -p "$VPS_PASS" ssh -o StrictHostKeyChecking=no Administrator@100.11.22.33 "docker ps"

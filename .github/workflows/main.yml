@@ -1,27 +1,7 @@
-name: Docker direkt auf Runner ausführen
-
-on:
-  push:
-    branches: [ "main" ]
-
-jobs:
-  deploy-local:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Run Local Docker Commands
+- name: Run Local Docker Commands
       run: |
-        echo "Starte deine Docker-Container..."
+        echo "Starte einen Nginx-Container..."
+        docker run -d -p 80:80 --name mein_webserver nginx
         
-        # Beispiel 1: Einen Container starten (z. B. Nginx)
-        # docker run -d -p 80:80 --name mein_server nginx
-        
-        # Beispiel 2: Falls du ein Dockerfile im Repository hast, um es zu bauen:
-        # docker build -t meine-app .
-        # docker run -d -p 8080:8080 meine-app
-        
-        # Am Ende zur Kontrolle auflisten (das, was jetzt geklappt hat)
+        echo "Aktuelle Container:"
         docker ps

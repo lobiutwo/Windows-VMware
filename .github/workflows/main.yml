@@ -19,30 +19,18 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Netzwerk-Verbindung prüfen und Docker kontaktieren
-    - name: Test Connection and Run Docker
+    # 3. IP automatisch herausfinden und Docker starten
+    - name: Run Docker on Windows VPS
       run: |
-        # Trage hier deine ECHTE Tailscale-IP ein
-        TARGET_IP="100.11.22.33"
+        echo "Suche VPS-IP im Tailscale-Netzwerk..."
         
-        echo "1. Prüfe, ob der Windows-VPS im Tailscale-Netzwerk online ist..."
-        if ping -c 3 "$TARGET_IP" > /dev/null 2>&1; then
-          echo "✅ VPS ist über Tailscale erreichbar!"
-        else
-          echo "❌ Fehler: VPS antwortet nicht auf Ping. Prüfe, ob Tailscale auf dem VPS läuft!"
-          exit 1
-        fi
+        # Holt sich automatisch die 100.x.x.x IP deines Windows-Geräts.
+        # Falls dein PC in Tailscale anders heißt, ersetze 'windows-vps' mit dem echten Namen!
+        TARGET_IP=$(tailscale ip -4 windows-vps)
         
-        echo "2. Versuche Docker auf Port 2375 zu erreichen..."
+        echo "Gefundene IP: $TARGET_IP"
+        
         export DOCKER_HOST="tcp://${TARGET_IP}:2375"
         
-        # Führt den Befehl mit einem kurzen Timeout aus, damit GitHub nicht 2 Minuten hängt
-        if docker --timeout 10 version > /dev/null 2>&1; then
-          echo "✅ Docker-Verbindung erfolgreich!"
-          docker ps
-        else
-          echo "❌ Fehler: Docker-Port 2375 antwortet nicht."
-          echo "👉 HINWEIS: Auf dem Windows 11 VPS muss in den Docker Desktop Einstellungen"
-          echo "   das Häkchen bei 'Expose daemon on tcp://localhost:2375 without TLS' aktiv sein!"
-          exit 1
-        fi
+        # Direkt der Docker-Befehl
+        docker ps

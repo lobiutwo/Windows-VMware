@@ -19,18 +19,26 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. IP automatisch herausfinden und Docker starten
+    # 3. IP des VPS automatisch aus der Liste fischen
     - name: Run Docker on Windows VPS
       run: |
-        echo "Suche VPS-IP im Tailscale-Netzwerk..."
+        echo "Hole mir die IP-Liste aus deinem Tailnet..."
         
-        # Holt sich automatisch die 100.x.x.x IP deines Windows-Geräts.
-        # Falls dein PC in Tailscale anders heißt, ersetze 'windows-vps' mit dem echten Namen!
-        TARGET_IP=$(tailscale ip -4 windows-vps)
+        # Zeigt uns zur Sicherheit alle Geräte im Log an, falls was schiefgeht
+        tailscale status
         
-        echo "Gefundene IP: $TARGET_IP"
+        # Sucht die erste IP, die mit 100. anfängt, aber filtert den aktuellen GitHub-Runner heraus
+        RUNNER_HOSTNAME=$(hostname)
+        TARGET_IP=$(tailscale status --json | jq -r --arg rm "$RUNNER_HOSTNAME" '.Peer[] | select(.HostName != $rm) | .TailscaleIPs[0]' | head -n 1)
+        
+        if [ -z "$TARGET_IP" ] || [ "$TARGET_IP" = "null" ]; then
+          echo "❌ Fehler: Kein anderes Tailscale-Gerät in der Liste gefunden!"
+          exit 1
+        fi
+        
+        echo "🎯 Gefundene VPS-IP: $TARGET_IP"
         
         export DOCKER_HOST="tcp://${TARGET_IP}:2375"
         
-        # Direkt der Docker-Befehl
+        # Ausführen!
         docker ps

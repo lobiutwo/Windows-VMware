@@ -6,7 +6,6 @@ on:
 
 jobs:
   deploy-and-docker:
-    # Hier nutzen wir nun die aktuellste Windows-Umgebung von GitHub
     runs-on: windows-latest
 
     steps:
@@ -15,22 +14,20 @@ jobs:
       uses: actions/checkout@v4
 
     # 2. Verbindung zum Tailscale Netzwerk aufbauen
-    # Wichtig: Der Punkt bei 'secrets.TAILSCALE_AUTH_KEY' ist jetzt korrigiert
+    # HINWEIS: Hier steht jetzt TAILESCALE_AUTH_KEY (wie auf deinem Screenshot)
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
-        authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+        authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
     # 3. Docker Befehle auf Windows ausführen
-    # Auf Windows-Runnern nutzt GitHub standardmäßig PowerShell (pwsh)
     - name: Run Docker Build or Command
       shell: pwsh
       run: |
-        Write-Host "Verbindung zu Tailscale steht. Windows-Runner ist im Tailnet."
+        Write-Host "Verbindung zu Tailscale steht. Windows-Runner ist aktiv."
         
-        # Beispiel: Lokal auf dem Windows-Server ein Image bauen
-        docker build -t mein-app-image:latest .
+        # Test, ob Docker auf dem Windows-Runner bereit ist
+        docker version
         
-        # Hinweis: Wenn du von hier aus via SSH auf einen Linux-Docker-Host 
-        # in deinem Tailscale-Netzwerk zugreifen willst, geht das in PowerShell so:
-        # ssh -o StrictHostKeyChecking=no user@100.10.20.30 "docker ps"
+        # Hier deine Docker-Befehle eintragen, z.B.:
+        # docker build -t mein-app-image:latest .

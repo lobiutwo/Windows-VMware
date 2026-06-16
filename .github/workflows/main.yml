@@ -1,4 +1,4 @@
-name: Tailscale Docker Linux
+name: Tailscale Docker CI/CD
 
 on:
   push:
@@ -19,17 +19,17 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Befehle über Tailscale an deine VM senden
-    - name: Run Remote Commands
+    # 3. Docker-Befehle an deine VM im Tailscale-Netzwerk senden
+    - name: Run Remote Docker Commands
       run: |
-        echo "Verbindung steht! Hier kannst du deine Infrastruktur ansteuern."
+        echo "Verbindung steht! Kontaktiere entfernten Docker-Host..."
         
-        # OOPTION A: Befehl an einen Docker-Host in deinem Tailnet senden
-        # (Ersetze 100.x.y.z mit der Tailscale-IP deiner VM)
-        # docker -H tcp://100.x.y.z:2375 ps
+        # ERSETZE '100.x.y.z' MIT DER TAILSCALE-IP DEINER VM!
+        # Damit sagst du GitHub, dass es Docker-Befehle direkt auf deiner VM ausführen soll.
+        export DOCKER_HOST="tcp://100.x.y.z:2375"
         
-        # OPTION B: Per SSH auf deine VMware/Windows-VM zugreifen
-        # ssh -o StrictHostKeyChecking=no user@100.x.y.z "echo 'Hallo von GitHub Actions'"
+        # Test: Zeigt dir die Container an, die auf deiner VM laufen
+        docker ps
         
-        # Falls du DOCH ein lokales Dockerfile hast, stelle sicher, dass es 
-        # exakt 'Dockerfile' (großes D, ohne Dateiendung) im Hauptverzeichnis heißt.
+        # Hier kannst du jetzt deine Container starten, z.B.:
+        # docker run -d -p 80:80 nginx

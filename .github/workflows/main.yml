@@ -19,18 +19,30 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. SSH-Passpass-Tool installieren (damit wir das Passwort per Skript übergeben können)
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
-
-    # 4. Über SSH direkt auf dem Windows 11 VPS einloggen und Docker steuern
-    - name: Run Docker on Windows 11 VPS via SSH
-      env:
-        VPS_PASS: ${{ secrets.VPS_PASSWORD }}
+    # 3. Netzwerk-Verbindung prüfen und Docker kontaktieren
+    - name: Test Connection and Run Docker
       run: |
-        echo "Verbindung steht. Baue SSH-Sitzung zum Windows 11 VPS auf..."
+        # Trage hier deine ECHTE Tailscale-IP ein
+        TARGET_IP="100.11.22.33"
         
-        # WICHTIG: Ersetze '100.11.22.33' mit deiner echten Tailscale-IP!
-        # Ersetze 'Administrator' mit deinem echten Benutzernamen des VPS!
+        echo "1. Prüfe, ob der Windows-VPS im Tailscale-Netzwerk online ist..."
+        if ping -c 3 "$TARGET_IP" > /dev/null 2>&1; then
+          echo "✅ VPS ist über Tailscale erreichbar!"
+        else
+          echo "❌ Fehler: VPS antwortet nicht auf Ping. Prüfe, ob Tailscale auf dem VPS läuft!"
+          exit 1
+        fi
         
-        sshpass -p "$VPS_PASS" ssh -o StrictHostKeyChecking=no Administrator@100.11.22.33 "docker ps"
+        echo "2. Versuche Docker auf Port 2375 zu erreichen..."
+        export DOCKER_HOST="tcp://${TARGET_IP}:2375"
+        
+        # Führt den Befehl mit einem kurzen Timeout aus, damit GitHub nicht 2 Minuten hängt
+        if docker --timeout 10 version > /dev/null 2>&1; then
+          echo "✅ Docker-Verbindung erfolgreich!"
+          docker ps
+        else
+          echo "❌ Fehler: Docker-Port 2375 antwortet nicht."
+          echo "👉 HINWEIS: Auf dem Windows 11 VPS muss in den Docker Desktop Einstellungen"
+          echo "   das Häkchen bei 'Expose daemon on tcp://localhost:2375 without TLS' aktiv sein!"
+          exit 1
+        fi

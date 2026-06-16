@@ -1,4 +1,4 @@
-name: Tailscale Docker CI/CD (Fixed)
+name: Tailscale Docker CI/CD
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
 
 jobs:
   deploy-and-docker:
-    # Wir MÜSSEN Linux nutzen, da die Tailscale-Action nur Linux unterstützt
     runs-on: ubuntu-latest
 
     steps:
@@ -15,24 +14,22 @@ jobs:
       uses: actions/checkout@v4
 
     # 2. Verbindung zum Tailscale Netzwerk aufbauen
-    # Benutzt deinen Secret-Namen aus dem Screenshot
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Docker-Umgebung auf dem Linux-Runner bereitstellen
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    # 4. Befehle ausführen
-    # Der Linux-Runner ist jetzt in deinem Tailnet und kann deine Server erreichen
-    - name: Run Docker or Remote Commands
+    # 3. Befehle über Tailscale an deine VM senden
+    - name: Run Remote Commands
       run: |
-        echo "Erfolgreich! Der Runner ist über Tailscale verbunden."
+        echo "Verbindung steht! Hier kannst du deine Infrastruktur ansteuern."
         
-        # Beispiel: Lokaler Docker Build auf dem Runner
-        docker build -t mein-app-image:latest .
+        # OOPTION A: Befehl an einen Docker-Host in deinem Tailnet senden
+        # (Ersetze 100.x.y.z mit der Tailscale-IP deiner VM)
+        # docker -H tcp://100.x.y.z:2375 ps
         
-        # Beispiel: Falls du deine Windows-VM/VMware über SSH steuern willst (Beispiel-IP):
-        # ssh -o StrictHostKeyChecking=no Administrator@100.x.y.z "powershell-befehl-hier"
+        # OPTION B: Per SSH auf deine VMware/Windows-VM zugreifen
+        # ssh -o StrictHostKeyChecking=no user@100.x.y.z "echo 'Hallo von GitHub Actions'"
+        
+        # Falls du DOCH ein lokales Dockerfile hast, stelle sicher, dass es 
+        # exakt 'Dockerfile' (großes D, ohne Dateiendung) im Hauptverzeichnis heißt.

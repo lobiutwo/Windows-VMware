@@ -19,13 +19,13 @@ jobs:
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Docker-Befehle an deine VM senden
+    # 3. Docker-Befehle direkt an die feste IP senden
     - name: Run Remote Docker Commands
       run: |
         echo "Verbindung steht über Auth-Key!"
         
-        # Holt sich die IP aus deinem TARGET_IP Secret
-        export DOCKER_HOST="tcp://${{ secrets.TARGET_IP }}:2375"
+        # WICHTIG: Ersetze 100.11.22.33 mit deiner echten Tailscale-IP!
+        export DOCKER_HOST="tcp://100.11.22.33:2375"
         
-        # Testet die Verbindung zu deinem Docker-Server
+        # Testet die Verbindung zu deinem entfernten Docker-Server
         docker ps

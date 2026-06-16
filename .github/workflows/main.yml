@@ -1,11 +1,11 @@
-name: Tailscale Docker Windows 11 VPS
+name: Docker direkt auf Runner ausführen
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  deploy-to-windows:
+  deploy-local:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,32 +13,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Verbindung über den Tailscale Auth-Key aufbauen
-    - name: Connect to Tailscale
-      uses: tailscale/github-action@v2
-      with:
-        authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
-
-    # 3. IP des VPS automatisch aus der Liste fischen
-    - name: Run Docker on Windows VPS
+    # 2. Direkt Docker-Befehle lokal ausführen
+    - name: Run Local Docker Commands
       run: |
-        echo "Hole mir die IP-Liste aus deinem Tailnet..."
+        echo "Führe Docker direkt lokal auf dem Runner aus..."
         
-        # Zeigt uns zur Sicherheit alle Geräte im Log an, falls was schiefgeht
-        tailscale status
-        
-        # Sucht die erste IP, die mit 100. anfängt, aber filtert den aktuellen GitHub-Runner heraus
-        RUNNER_HOSTNAME=$(hostname)
-        TARGET_IP=$(tailscale status --json | jq -r --arg rm "$RUNNER_HOSTNAME" '.Peer[] | select(.HostName != $rm) | .TailscaleIPs[0]' | head -n 1)
-        
-        if [ -z "$TARGET_IP" ] || [ "$TARGET_IP" = "null" ]; then
-          echo "❌ Fehler: Kein anderes Tailscale-Gerät in der Liste gefunden!"
-          exit 1
-        fi
-        
-        echo "🎯 Gefundene VPS-IP: $TARGET_IP"
-        
-        export DOCKER_HOST="tcp://${TARGET_IP}:2375"
-        
-        # Ausführen!
+        # Kein Export von DOCKER_HOST nötig!
+        # Der Linux-Runner greift direkt auf seinen eigenen lokalen Docker-Dienst zu.
         docker ps

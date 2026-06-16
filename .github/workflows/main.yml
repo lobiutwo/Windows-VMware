@@ -1,4 +1,4 @@
-name: Tailscale Docker CI/CD
+name: Tailscale Docker Linux
 
 on:
   push:

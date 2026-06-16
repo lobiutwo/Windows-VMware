@@ -1,13 +1,13 @@
-name: Tailscale Docker CI/CD
+name: Tailscale Docker CI/CD (Windows)
 
-# Der Workflow startet bei jedem Push auf den main-Branch
 on:
   push:
     branches: [ "main" ]
 
 jobs:
   deploy-and-docker:
-    runs-on: ubuntu-latest
+    # Hier nutzen wir nun die aktuellste Windows-Umgebung von GitHub
+    runs-on: windows-latest
 
     steps:
     # 1. Code aus dem Repository auschecken
@@ -15,23 +15,22 @@ jobs:
       uses: actions/checkout@v4
 
     # 2. Verbindung zum Tailscale Netzwerk aufbauen
+    # Wichtig: Der Punkt bei 'secrets.TAILSCALE_AUTH_KEY' ist jetzt korrigiert
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
-        authkey: ${{ secrets::TAILSCALE_AUTH_KEY }}
+        authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
 
-    # 3. Docker-Umgebung einrichten (falls du ein Image bauen willst)
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    # 4. Beispiel: Docker Befehl ausführen
-    # Da Tailscale aktiv ist, kann der Runner nun z.B. auf private Registries 
-    # oder einen Docker-Host in deinem Tailnet zugreifen.
+    # 3. Docker Befehle auf Windows ausführen
+    # Auf Windows-Runnern nutzt GitHub standardmäßig PowerShell (pwsh)
     - name: Run Docker Build or Command
+      shell: pwsh
       run: |
-        echo "Verbindung zu Tailscale steht. Führe Docker-Befehle aus..."
-        # Beispiel 1: Lokal im Runner ein Image bauen
+        Write-Host "Verbindung zu Tailscale steht. Windows-Runner ist im Tailnet."
+        
+        # Beispiel: Lokal auf dem Windows-Server ein Image bauen
         docker build -t mein-app-image:latest .
         
-        # Beispiel 2: Falls du docker-compose auf einem entfernten Server im Tailnet triggern willst (Beispiel-IP: 100.10.20.30)
-        # ssh -o StrictHostKeyChecking=no user@100.10.20.30 "cd /app && docker compose pull && docker compose up -d"
+        # Hinweis: Wenn du von hier aus via SSH auf einen Linux-Docker-Host 
+        # in deinem Tailscale-Netzwerk zugreifen willst, geht das in PowerShell so:
+        # ssh -o StrictHostKeyChecking=no user@100.10.20.30 "docker ps"

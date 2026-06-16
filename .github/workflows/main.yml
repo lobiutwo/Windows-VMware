@@ -1,4 +1,4 @@
-name: Tailscale Docker CI/CD (API OAuth - Safe Mode)
+name: Tailscale Docker CI/CD
 
 on:
   push:
@@ -13,18 +13,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Verbindung über die Tailscale API aufbauen
-    # Hier füttern wir nun beide Eventualitäten, damit nichts leer bleibt!
+    # 2. Verbindung über den Auth-Key aufbauen
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
-        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID || secrets.TS_OAUTH_SECRET }}
-        oauth-secret: ${{ secrets.TS_OAUTH_SECRET || secrets.TS_OAUTH_CLIENT_ID }}
+        authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
     # 3. Docker-Befehle an deine VM senden
     - name: Run Remote Docker Commands
       run: |
-        echo "Verbindung steht über OAuth API!"
+        echo "Verbindung steht über Auth-Key!"
         
         # Holt sich die IP aus deinem TARGET_IP Secret
         export DOCKER_HOST="tcp://${{ secrets.TARGET_IP }}:2375"

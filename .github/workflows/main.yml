@@ -1,4 +1,4 @@
-name: Tailscale Docker CI/CD
+name: Tailscale Docker CI/CD (API OAuth - Fixed)
 
 on:
   push:
@@ -13,19 +13,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Verbindung zum Tailscale Netzwerk aufbauen
+    # 2. Verbindung über die Tailscale API aufbauen
+    # HINWEIS: Hier sind die Secrets jetzt für dich vertauscht eingebaut!
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
-        authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
+        oauth-client-id: ${{ secrets.TS_OAUTH_SECRET }}
+        oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_ID }}
 
-    # 3. Docker-Befehle an deine VM im Tailscale-Netzwerk senden
+    # 3. Docker-Befehle an deine VM senden
     - name: Run Remote Docker Commands
       run: |
-        echo "Verbindung steht! Kontaktiere entfernten Docker-Host..."
+        echo "Verbindung steht über OAuth API!"
         
-        # GitHub setzt hier jetzt automatisch deine echte IP aus den Secrets ein
+        # Holt sich die IP aus deinem TARGET_IP Secret
         export DOCKER_HOST="tcp://${{ secrets.TARGET_IP }}:2375"
         
-        # Test: Zeigt dir die Container an, die auf deiner VM laufen
+        # Testet die Verbindung zu deinem Docker-Server
         docker ps

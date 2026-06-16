@@ -1,11 +1,11 @@
-name: Tailscale Docker CI/CD
+name: Tailscale Docker Windows 11 VPS
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  deploy-and-docker:
+  deploy-to-windows:
     runs-on: ubuntu-latest
 
     steps:
@@ -13,19 +13,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Verbindung über den Auth-Key aufbauen
+    # 2. Verbindung über den Tailscale Auth-Key aufbauen
     - name: Connect to Tailscale
       uses: tailscale/github-action@v2
       with:
         authkey: ${{ secrets.TAILESCALE_AUTH_KEY }}
 
-    # 3. Docker-Befehle direkt an die feste IP senden
-    - name: Run Remote Docker Commands
-      run: |
-        echo "Verbindung steht über Auth-Key!"
-        
-        # WICHTIG: Ersetze 100.11.22.33 mit deiner echten Tailscale-IP!
-        export DOCKER_HOST="tcp://100.11.22.33:2375"
-        
-        # Testet die Verbindung zu deinem entfernten Docker-Server
-        docker ps
+    # 3. Befehle DIREKT auf dem Windows 11 VPS ausführen via WinRM
+    - name: Run Docker on Windows 11 VPS
+      uses: mastercard/winrm-actions@v2
+      with:
+        host: 100.11.22.33                  # <-- Hier die echte Tailscale-IP deines Windows 11 VPS rein!
+        username: Administrator             # <-- Dein Windows-Benutzername auf dem VPS
+        password: ${{ secrets.VPS_PASSWORD }} # <-- Dein Windows-Passwort (als GitHub Secret anlegen!)
+        # Hier kommen die Befehle rein, die lokal AUF deinem Windows 11 VPS getippt werden sollen:
+        command: |
+          echo "Erfolgreich eingeloggt auf Windows 11 VPS!"
+          
+          # Zeigt die Docker-Container auf dem Windows VPS an
+          docker ps
+          
+          # Hier kannst du deine Docker-Befehle eintragen:
+          # docker run -d -p 80:80 nginx
